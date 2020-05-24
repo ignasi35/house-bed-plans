@@ -29,8 +29,17 @@ fence_rail_height=34;
 fence_main_width=34;
 fence_main_height=68;
 fence_bar_width=34;
-fence_bar_height=34;
+fence_bar_height=fence_bar_width;
 fence_bar_length=280; // 28cm
+
+fence_rail_entrance_length=1200;
+
+// the separation between fence bars is determined by 
+// the aesthetics of the head/foot fence. If the head/foot 
+// fence looks nicer with 6 voids (5 bars), then that separation
+// will govern all the bed fences
+fence_bar_separation=(bed_board_width+fence_bar_width)/6 ; // 188
+
 
 module fence_bar() {
         cube(
@@ -43,11 +52,10 @@ module fence_bar() {
 }
 
 // 1. head/foot fence
-module head_foo_fence() {
-  fence_bar_separation=(bed_board_width+fence_bar_width)/6 ; // 188
+module head_foot_fence() {
 
   // fence main
-  translate([0,0, -1*((fence_bar_length + fence_main_height)/2 - 0.001)])
+  translate([0,0, -1*((fence_bar_length + fence_main_height)/2)])
     cube([
         bed_board_width,   // x
         fence_main_width,  // y 
@@ -56,7 +64,7 @@ module head_foo_fence() {
        center=true);
 
   // fence rail
-  translate([0,0, ((fence_bar_length + fence_rail_height)/2 - 0.001)])
+  translate([0,0, ((fence_bar_length + fence_rail_height)/2)])
     cube(
        [
         bed_board_width,   // x
@@ -74,11 +82,84 @@ module head_foo_fence() {
 }
 
 
-translate([0, -(bed_board_length/2), 0])
-    head_foo_fence();
-translate([0, (bed_board_length/2), 0])
-    head_foo_fence();
+// 2. wall fence
+module wall_fence() {
+  // fence main
+  translate([0,0, -1*((fence_bar_length + fence_main_height)/2)])
+   rotate([0,0,90])
+    cube([
+        bed_board_length,   // x
+        fence_main_width,  // y 
+        fence_main_height  // z
+        ],
+       center=true);
+
+  // fence rail
+  translate([0,0, ((fence_bar_length + fence_rail_height)/2)])
+   rotate([0,0,90])
+    cube(
+       [
+        bed_board_length,   // x
+        fence_rail_width,  // y 
+        fence_rail_height  // z
+        ],
+       center=true);
+
+  // fence bars
+  x=bed_board_length+fence_bar_width;
+  for (dy=[ -x/2 + fence_bar_separation :fence_bar_separation: x/2]) {
+    translate([0, dy, 0])
+    fence_bar();
+  }
+}
+
+
+// 3. entrance fence
+module entrance_fence() {
+  // fence main
+  translate([0,0, -1*((fence_bar_length + fence_main_height)/2)])
+   rotate([0,0,90])
+    cube([
+        bed_board_length,   // x
+        fence_main_width,  // y 
+        fence_main_height  // z
+        ],
+       center=true);
+  translate([0,(bed_board_length-fence_rail_entrance_length)/2,0])
+    entrance_fence_rail();
+}
+module entrance_fence_rail() {
+  // fence rail
+  translate([0, 0, ((fence_bar_length + fence_rail_height)/2)])
+   rotate([0,0,90])
+    cube(
+       [
+        fence_rail_entrance_length,   // x
+        fence_rail_width,  // y 
+        fence_rail_height  // z
+        ],
+       center=true);
+
+  // fence bars
+  start = (fence_rail_entrance_length-fence_rail_width)/2;
+  end = start;
+  for (dy=[ -start :fence_bar_separation: end]) {
+    translate([0, dy, 0])
+    fence_bar();
+  }
+}
 
 
 
+
+
+
+translate([0, -(bed_board_length+fence_bar_width)/2, 0])
+    head_foot_fence();
+translate([0, (bed_board_length+fence_bar_width)/2, 0])
+    head_foot_fence();
+translate([-(bed_board_width+fence_bar_width)/2, 0])
+    wall_fence();
+translate([(bed_board_width+fence_bar_width)/2, 0])
+    entrance_fence();
 
