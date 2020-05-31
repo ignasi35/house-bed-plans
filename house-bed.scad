@@ -36,12 +36,11 @@ board_support = 10 ;
 
 fence_rail_entrance_length=1100;
 
-
 main_leg_width=44;
 main_leg_height=44;
 main_leg_length=1400;
 
-height_from_floor= 100;
+height_from_floor= 140;
 
 header_length=bed_board_width + fence_bar_width;
 
@@ -49,8 +48,14 @@ header_length=bed_board_width + fence_bar_width;
 // the aesthetics of the head/foot fence. If the head/foot 
 // fence looks nicer with 6 voids (5 bars), then that separation
 // will govern all the bed fences
-fence_bar_separation=(header_length+fence_bar_width)/4 ; // 188
+fence_bar_separation=(header_length+fence_bar_width)/5 ; // 188
 
+fence_up=fence_bar_length/2+fence_main_height;
+board_up=board_support+main_leg_height/5;
+
+margin = fence_main_width/sqrt(2);
+roof_length = (header_length)/sqrt(2) + margin;
+roof_height = roof_length/sqrt(2) - margin ;
 
 module fence_bar() {
   cube([
@@ -103,6 +108,17 @@ module wall_fence() {
         fence_main_height  // z
         ],
        center=true);
+  // side top
+  top_up = main_leg_length - height_from_floor - fence_up - fence_main_width/2;
+  translate([0,0, top_up])
+   rotate([0,0,90])
+    cube([
+        bed_board_length,   // x
+        fence_main_width,  // y 
+        fence_main_height  // z
+        ],
+       center=true);
+
 
   // fence rail
   translate([0,0, ((fence_bar_length + fence_rail_height)/2)])
@@ -123,8 +139,7 @@ module wall_fence() {
       fence_bar();
   }
   
-  wall_support_up = -( fence_bar_length/2+fence_main_height)+board_up;
-  color("cyan")
+  wall_support_up = -( -fence_main_width*1/7 + fence_bar_length/2 + fence_main_height  );  color("cyan")
    translate([fence_main_width/2+board_support/2, 0, wall_support_up])
       cube([
         board_support,   // x
@@ -159,6 +174,7 @@ module entrance_fence_rail() {
 }
 
 module entrance_fence() {
+//  adjust_up = 
   // fence main
   translate([0,0, -1*((fence_bar_length + fence_main_height)/2)])
    rotate([0,0,90])
@@ -168,10 +184,22 @@ module entrance_fence() {
         fence_main_height  // z
         ],
        center=true);
+
+  // side top
+  top_up = main_leg_length - height_from_floor - fence_up - fence_main_width/2;
+  translate([0,0, top_up])
+   rotate([0,0,90])
+    cube([
+        bed_board_length,   // x
+        fence_main_width,  // y 
+        fence_main_height  // z
+        ],
+       center=true);
+
   translate([0,(bed_board_length-fence_rail_entrance_length)/2,0])
     entrance_fence_rail();
 
-  wall_support_up = -( fence_bar_length/2+fence_main_height)+board_up;
+  wall_support_up = -( -fence_main_width*1/7 + fence_bar_length/2 + fence_main_height  );
   color("cyan")
    translate([-(fence_main_width+board_support)/2, 0, wall_support_up])
       cube([
@@ -192,34 +220,38 @@ module bed_board () {
        center=true);
     
 }
-
-
-fence_up=fence_bar_length/2+fence_main_height;
-board_up=board_support+main_leg_height/5;
-
 module header() {
   translate([ 0, 0 , fence_up])
     head_foot_fence();
-    
+   
   // side legs
-  up = main_leg_length/2 - height_from_floor  ;
-  translate([ header_length/2 , 0 ,  up])
+  side_leg_up = main_leg_length/2 - height_from_floor  ;
+  translate([ header_length/2 , 0 ,  side_leg_up])
     cube([
         main_leg_height,   // x
         main_leg_width,  // y 
         main_leg_length  // z
         ],
        center=true);
-  translate([ -header_length/2, 0 ,  up])
+  translate([ -header_length/2, 0 ,  side_leg_up])
     cube([
         main_leg_height,   // x
         main_leg_width,  // y 
         main_leg_length  // z
+        ],
+       center=true);
+
+  top_up = main_leg_length - height_from_floor - main_leg_height/2 ;
+  translate([0,0, top_up])
+    cube([
+        header_length,   // x
+        fence_main_width,  // y 
+        fence_main_height  // z
         ],
        center=true);
 
   color("cyan")
-   translate([0, -(fence_main_width/2 + board_support), fence_main_width/2])
+   translate([0, -(fence_main_width/2 + board_support), fence_main_width*1/7])
       cube([
         bed_board_width -100,   // x
         board_support,  // y 
@@ -235,22 +267,64 @@ module footer() {
 }
 
 
+
+module roof_side() {
+        translate([ 0,0, roof_length/2-fence_main_width/2])
+          cube([
+              fence_main_width,   // x
+              fence_main_width,  // y 
+              roof_length  // z
+              ],
+             center=true);
+        translate([ 0,roof_length/2-fence_main_width/2, 0])
+          rotate([90,0,0])
+             cube([
+                fence_main_width,   // x
+                fence_main_width,  // y 
+                roof_length  // z
+                ],
+               center=true);
+}
+
+module roof() {
+        cube([
+            bed_board_length,   // x
+            fence_main_width,  // y 
+            fence_main_height  // z
+            ],
+           center=true);
+        translate([ (bed_board_length+fence_main_width) /2,0, 0])
+          roof_side();
+        translate([ -(bed_board_length+fence_main_width) /2,0, 0])
+          roof_side();
+}
+
+
+
+
 module full_bed(){
   translate([0, -(bed_board_length+fence_bar_width)/2, 0])
     footer();
   translate([0, (bed_board_length+fence_bar_width)/2, 0])
     header();
-  
+
+  translate([0, 0, main_leg_length-height_from_floor + roof_height])
+    rotate([0,225,0])
+      rotate([0,0,90])
+        roof();
+    
   translate([-header_length/2, 0, fence_up])
     wall_fence();
   translate([header_length/2 , 0, fence_up])
     entrance_fence();
     
-  translate([0, 0, board_up + bed_board_height/2 + board_support/2 +1 ])
+    
+  translate([0, 0, board_up + bed_board_height*1/7 + board_support/2 +1 ])
     bed_board();
     
 }
 
+//roof();
 
 full_bed();
 
