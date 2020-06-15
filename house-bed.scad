@@ -14,48 +14,56 @@
 //     $fs = 0.4;
 
 
-bed_board_width=940;   // 0.94m
-bed_board_length=1840; // 1.84m
+bed_board_width=910;   // 0.91m
+bed_board_length=1810; // 1.81m
 bed_board_height=28;
+
+mattress_board_width=900;   // 
+mattress_board_length=1800; // 
+mattress_board_height=190;  // 
+
+
+main_leg_width=44;
+main_leg_height=44;
+main_leg_length=1400;
+
 
 // PART MODULES
 
 // fence common
 //https://www.bricomart.es/liston-abeto-cepillado-2400-x-68-x-34-mm.html
 //https://www.bricomart.es/liston-abeto-cepillado-2400-x-34-x-34-mm.html
-fence_rail_width=44;
-fence_rail_height=44;  // !! 
-fence_main_width=44;
-fence_main_height=44;
-fence_bar_width=44;
+fence_rail_width=45;
+fence_rail_height=45;  // !! 
+fence_main_width=45;
+fence_main_height=45;
+fence_bar_width=45;
 fence_bar_height=fence_bar_width;
-fence_bar_length=280; // 28cm
+fence_bar_length=320; // magic number
+
 
 // both W and H are equivalent
 board_support = 10 ; 
 
-fence_rail_entrance_length=1100;
-
-main_leg_width=44;
-main_leg_height=44;
-main_leg_length=1400;
+fence_rail_entrance_length=1200;
 
 height_from_floor= 140;
 
-header_length=bed_board_width + fence_bar_width;
+header_length=bed_board_width;
+full_side_width=bed_board_width + 2*main_leg_width ;
 
 // the separation between fence bars is determined by 
 // the aesthetics of the head/foot fence. If the head/foot 
 // fence looks nicer with 6 voids (5 bars), then that separation
 // will govern all the bed fences
-fence_bar_separation=(header_length+fence_bar_width)/5 ; // 188
+fence_bar_separation=(header_length+fence_bar_width)/4 ; // 188
 
 fence_up=fence_bar_length/2+fence_main_height;
 board_up=board_support+main_leg_height/5;
 
 margin = fence_main_width/sqrt(2);
-roof_length = (header_length)/sqrt(2) + margin;
-roof_height = roof_length/sqrt(2) - margin ;
+roof_length = (full_side_width)/sqrt(2) ;
+roof_height = roof_length/sqrt(2) ;
 
 module fence_bar() {
   cube([
@@ -220,20 +228,36 @@ module bed_board () {
        center=true);
     
 }
+
+module mattress () {
+    
+  color("white")
+    cube([
+        mattress_board_width,   // x
+        mattress_board_length,  // y 
+        mattress_board_height  // z
+        ],
+       center=true);
+    
+}
+
+
+
 module header() {
   translate([ 0, 0 , fence_up])
     head_foot_fence();
    
   // side legs
   side_leg_up = main_leg_length/2 - height_from_floor  ;
-  translate([ header_length/2 , 0 ,  side_leg_up])
+  side_leg_x= header_length + main_leg_width;
+  translate([ side_leg_x/2 , 0 ,  side_leg_up])
     cube([
         main_leg_height,   // x
         main_leg_width,  // y 
         main_leg_length  // z
         ],
        center=true);
-  translate([ -header_length/2, 0 ,  side_leg_up])
+  translate([ -side_leg_x/2, 0 ,  side_leg_up])
     cube([
         main_leg_height,   // x
         main_leg_width,  // y 
@@ -271,16 +295,16 @@ module footer() {
 module roof_side() {
         translate([ 0,0, roof_length/2-fence_main_width/2])
           cube([
-              fence_main_width,   // x
-              fence_main_width,  // y 
+              fence_bar_width,   // x
+              fence_bar_width,  // y 
               roof_length  // z
               ],
              center=true);
         translate([ 0,roof_length/2-fence_main_width/2, 0])
           rotate([90,0,0])
              cube([
-                fence_main_width,   // x
-                fence_main_width,  // y 
+                fence_bar_width,   // x
+                fence_bar_width,  // y 
                 roof_length  // z
                 ],
                center=true);
@@ -289,8 +313,8 @@ module roof_side() {
 module roof() {
         cube([
             bed_board_length,   // x
-            fence_main_width,  // y 
-            fence_main_height  // z
+            fence_bar_width,  // y 
+            fence_bar_height  // z
             ],
            center=true);
         translate([ (bed_board_length+fence_main_width) /2,0, 0])
@@ -303,28 +327,30 @@ module roof() {
 
 
 module full_bed(){
+    
   translate([0, -(bed_board_length+fence_bar_width)/2, 0])
     footer();
   translate([0, (bed_board_length+fence_bar_width)/2, 0])
     header();
-
-  translate([0, 0, main_leg_length-height_from_floor + roof_height])
+  translate([0, 0, main_leg_length-height_from_floor + roof_height-margin])
     rotate([0,225,0])
       rotate([0,0,90])
         roof();
     
-  translate([-header_length/2, 0, fence_up])
+  translate([-(header_length+main_leg_width)/2, 0, fence_up])
     wall_fence();
-  translate([header_length/2 , 0, fence_up])
+  translate([(header_length+main_leg_width)/2 , 0, fence_up])
     entrance_fence();
     
-    
-  translate([0, 0, board_up + bed_board_height*1/7 + board_support/2 +1 ])
+  b_up = board_up + bed_board_height*1/7 + board_support/2 +1 ;
+  translate([0, 0, b_up ])
     bed_board();
+    
+  translate([0, 0, mattress_board_height/2 + b_up])
+    mattress();
     
 }
 
-//roof();
 
 full_bed();
 
