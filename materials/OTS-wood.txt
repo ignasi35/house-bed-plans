@@ -1,7 +1,0 @@
-
-Will use 20c 45x45mm and 3x 20x20mm by a local supplier (small enough they don't even have a website).
-
-NOTES: 
-
- - bed board must be at least 18mm or 19mm thick.
- - 8mm dowells for the whole assembly
