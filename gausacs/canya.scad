@@ -1,8 +1,11 @@
 // canya.scad
-$fn = 10; // smoother resolution
+$fn = 50; // smoother resolution
 
 preparePrint = true; // set to false to hide the print bed
-showCanyes = false; // set to false to hide the canya instances
+showCanyes = true; // set to false to hide the canya instances
+showBottom = true; // set to false to hide the bottom piece
+showTop = true; // set to false to hide the top piece
+showHolder = true;
 
 wallThickness = 30; // 3 mm thickness of the walls of the canya
 
@@ -24,11 +27,23 @@ plateZ = 200;
 // Example: three copies side-by-side, rotated 45° clockwise, different colors
 // define instance parameters (reuse defaults above)
 pieceMaxDiameter = 132;
-spacing = 30;
+spacing = 60;
 
 totalCanyaHeight = height1 + height2 + height3 + height4 + height5 + plateZ;
 
-internalTotalBoxHeight = totalCanyaHeight + 3 * spacing;
+internalTotalBoxHeight = totalCanyaHeight + 1 * spacing;
+
+// base under the three instances: 2 mm high, centered, extended to hold all three
+baseMargin = spacing; // extra space around the pieces
+
+baseHeight = wallThickness;
+baseWidth = 3 * pieceMaxDiameter + spacing + 2 * baseMargin + 2 * wallThickness;
+baseDepth = pieceMaxDiameter + 2 * baseMargin + 2 * wallThickness + 0 * spacing;
+
+bottomHalfHeight = internalTotalBoxHeight * 6 / 19 + wallThickness; // for positioning the canya instances
+topHalfHeight = internalTotalBoxHeight * 13 / 19 + wallThickness; // for positioning the canya instances
+
+rimHeight = wallThickness * 4;
 
 // Reusable module: canya()
 module canya() {
@@ -64,17 +79,19 @@ module canya() {
   }
 }
 
-// base under the three instances: 2 mm high, centered, extended to hold all three
-baseMargin = spacing; // extra space around the pieces
-
-baseHeight = wallThickness;
-baseWidth = 3 * pieceMaxDiameter + 2 * spacing + 2 * baseMargin + 2 * wallThickness;
-baseDepth = pieceMaxDiameter + 2 * baseMargin + 2 * wallThickness + 1 * spacing;
-
-bottomHalfHeight = internalTotalBoxHeight * 7 / 19 + wallThickness; // for positioning the canya instances
-topHalfHeight = internalTotalBoxHeight * 12 / 19 + wallThickness; // for positioning the canya instances
-
-rimHeight = wallThickness * 4;
+module holes() {
+  cWidth = baseWidth;
+  cHeight = baseDepth;
+  translate([-(cWidth) * 2 / 7, 0, -100]) {
+    cylinder(h=10000, r=wallThickness, center=false);
+  }
+  translate([0, 0, -100]) {
+    cylinder(h=10000, r=wallThickness, center=false);
+  }
+  translate([(cWidth) * 2 / 7, 0, -100]) {
+    cylinder(h=10000, r=wallThickness, center=false);
+  }
+}
 
 module bottom() {
   // create two cubes (height 100): large same as base footprint, small 3mm smaller in width and depth
@@ -163,15 +180,15 @@ module topRim() {
     translate([-(cWidth) / 5, -(cHeight) / 2, bottomHalfHeight + rimHeight / 2]) {
       resize(newsize=[30, 10, 30]) sphere(r=1000);
     }
-    translate([-(cWidth) / 5, (cHeight) / 2, bottomHalfHeight + rimHeight / 2]) {
-        resize(newsize=[30, 10, 30]) sphere(r=1000);
-    }
-    translate([(cWidth) / 5, -(cHeight) / 2, bottomHalfHeight + rimHeight / 2]) {
-      resize(newsize=[30, 10, 30]) sphere(r=1000);
-    }
-    translate([(cWidth) / 5, (cHeight) / 2, bottomHalfHeight + rimHeight / 2]) {
-        resize(newsize=[30, 10, 30]) sphere(r=1000);
-    }
+  translate([-(cWidth) / 5, (cHeight) / 2, bottomHalfHeight + rimHeight / 2]) {
+    resize(newsize=[30, 10, 30]) sphere(r=1000);
+  }
+  translate([(cWidth) / 5, -(cHeight) / 2, bottomHalfHeight + rimHeight / 2]) {
+    resize(newsize=[30, 10, 30]) sphere(r=1000);
+  }
+  translate([(cWidth) / 5, (cHeight) / 2, bottomHalfHeight + rimHeight / 2]) {
+    resize(newsize=[30, 10, 30]) sphere(r=1000);
+  }
 
   // the bottom piece of the box has a bit of an internal rim to 
   // hold the top piece in place.  This is a simple 3D rectangle that is subtracted from the top piece.
@@ -222,22 +239,90 @@ module top() {
     }
 }
 
-// bottom base
-bottom();
-bottomRim();
+// create a holder for the canya instances. It is a thin floating wall with 3 holes.
+// The holder is 4*wallThickness from the bottom so the canya instances can be placed into it.
+// the holder also has pillars to keep it separate from the bottom}
+module holder() {
+  cWidth = baseWidth - 2*wallThickness - 5;
+  cHeight = baseDepth - 2*wallThickness - 5;
+  color([0.8, 0.6, 0.2])
+    translate([-cWidth / 2, -cHeight / 2, wallThickness * 5]) {
+      // large cube
+      linear_extrude(height=wallThickness)
+        offset(r=wallThickness / 2)
+          square([cWidth, cHeight], center=false);
+    }
+  translate([topDiameter1 / 2 + wallThickness, topDiameter1 / 2 + wallThickness, 3 * wallThickness]) {
+    cylinder(h=wallThickness * 4.5, r=wallThickness * 2 / 3, center=true);
+  }
+  translate([-topDiameter1 / 2 - wallThickness, topDiameter1 / 2 + wallThickness, 3 * wallThickness]) {
+    cylinder(h=wallThickness * 4.5, r=wallThickness * 2 / 3, center=true);
+  }
+  translate([topDiameter1 / 2 + wallThickness, -topDiameter1 / 2 - wallThickness, 3 * wallThickness]) {
+    cylinder(h=wallThickness * 4.5, r=wallThickness * 2 / 3, center=true);
+  }
+  translate([-topDiameter1 / 2 - wallThickness, -topDiameter1 / 2 - wallThickness, 3 * wallThickness]) {
+    cylinder(h=wallThickness * 4.5, r=wallThickness * 2 / 3, center=true);
+  }
+}
 
-if (preparePrint) {
-  // top base
-  translate([0, 0, rimHeight+ 100]) {
+module holderHoles() {
+  cWidth = baseWidth;
+  cHeight = baseDepth;
+  translate([-spacing - pieceMaxDiameter, 0, 0]) {
+    cylinder(h=10000, r=2 + topDiameter1 / 2, center=false);
+  }
+  translate([0, 0, 0]) {
+    cylinder(h=10000, r=2 + topDiameter1 / 2, center=false);
+  }
+  translate([spacing + pieceMaxDiameter, 0, 0]) {
+    cylinder(h=10000, r=2 + topDiameter1 / 2, center=false);
+  }
+}
+
+// bottom base
+if (showBottom) {
+  difference() {
+    bottom();
+    holes();
+  }
+  bottomRim();
+}
+
+if (showHolder) {
+  if (preparePrint) {
+    // top base
+    translate([200 + baseWidth, 200 + baseDepth,0]) {
+      difference() {
+        holder();
+        holderHoles();
+      }
+    }
+  } else {
     difference() {
-      top();
-      topRim();
+      holder();
+      holderHoles();
     }
   }
-} else {
+}
+
+if (showTop) {
   difference() {
-    top();
-    topRim();
+    if (preparePrint) {
+      // top base
+      translate([0, 0, rimHeight + 100]) {
+        difference() {
+          top();
+          topRim();
+        }
+      }
+    } else {
+      difference() {
+        top();
+        topRim();
+      }
+    }
+    holes();
   }
 }
 
