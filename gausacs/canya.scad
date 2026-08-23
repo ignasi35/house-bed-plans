@@ -1,7 +1,12 @@
-// canya.scad
-$fn = 50; // smoother resolution
 
 preparePrint = true; // set to false to hide the print bed
+
+if(preparePrint) {
+    $fn = 50; // smoother resolution
+} else {
+    $fn = 20; // lower resolution for faster rendering
+}
+
 showCanyes = true; // set to false to hide the canya instances
 showBottom = true; // set to false to hide the bottom piece
 showTop = true; // set to false to hide the top piece
@@ -125,19 +130,26 @@ module bottom() {
 module bottomRim() {
   cWidth = baseWidth;
   cHeight = baseDepth;
+  protrusionDepth = 12; // 1.2 mm depth of the protrusions
   color([0.8, 0.8, 0])
     // The bottom rim has 4 rounded protrusions (spheres) to make it easier to click into place.
     translate([-(cWidth) / 5, -(cHeight) / 2, bottomHalfHeight + rimHeight / 2]) {
-      resize(newsize=[30, 10, 30]) sphere(r=1000);
+      resize(newsize=[30, protrusionDepth, 30]) sphere(r=1000);
     }
   translate([-(cWidth) / 5, (cHeight) / 2, bottomHalfHeight + rimHeight / 2]) {
-    resize(newsize=[30, 10, 30]) sphere(r=1000);
+    resize(newsize=[30, protrusionDepth, 30]) sphere(r=1000);
   }
   translate([(cWidth) / 5, -(cHeight) / 2, bottomHalfHeight + rimHeight / 2]) {
-    resize(newsize=[30, 10, 30]) sphere(r=1000);
+    resize(newsize=[30, protrusionDepth, 30]) sphere(r=1000);
   }
   translate([(cWidth) / 5, (cHeight) / 2, bottomHalfHeight + rimHeight / 2]) {
-    resize(newsize=[30, 10, 30]) sphere(r=1000);
+    resize(newsize=[30, protrusionDepth, 30]) sphere(r=1000);
+  }
+  translate([(cWidth) / 2, 0, bottomHalfHeight + rimHeight / 2]) {
+    resize(newsize=[protrusionDepth, 30, 30]) sphere(r=1000);
+  }
+  translate([-(cWidth) / 2, 0, bottomHalfHeight + rimHeight / 2]) {
+    resize(newsize=[protrusionDepth, 30, 30]) sphere(r=1000);
   }
   // the bottom piece of the box has a bit of an internal rim to 
   // holfd the top piece in place.  This is a simple 3D rectangle that is subtracted from the top piece.
@@ -175,20 +187,28 @@ module bottomRim() {
 module topRim() {
   cWidth = baseWidth + wallThickness * 1 / 4;
   cHeight = baseDepth + wallThickness * 1 / 4;
+  protrusionDepth = 11; 
   color([0.8, 0.2, 0.5, 0.8])
     // The top rim has 2 rounded holes (spheres) to make it easier to click into place.
     translate([-(cWidth) / 5, -(cHeight) / 2, bottomHalfHeight + rimHeight / 2]) {
-      resize(newsize=[30, 10, 30]) sphere(r=1000);
+      resize(newsize=[30, protrusionDepth, 30]) sphere(r=1000);
     }
   translate([-(cWidth) / 5, (cHeight) / 2, bottomHalfHeight + rimHeight / 2]) {
-    resize(newsize=[30, 10, 30]) sphere(r=1000);
+    resize(newsize=[30, protrusionDepth, 30]) sphere(r=1000);
   }
   translate([(cWidth) / 5, -(cHeight) / 2, bottomHalfHeight + rimHeight / 2]) {
-    resize(newsize=[30, 10, 30]) sphere(r=1000);
+    resize(newsize=[30, protrusionDepth, 30]) sphere(r=1000);
   }
   translate([(cWidth) / 5, (cHeight) / 2, bottomHalfHeight + rimHeight / 2]) {
-    resize(newsize=[30, 10, 30]) sphere(r=1000);
+    resize(newsize=[30, protrusionDepth, 30]) sphere(r=1000);
   }
+    translate([(cWidth) / 2, 0, bottomHalfHeight + rimHeight / 2]) {
+    resize(newsize=[protrusionDepth, 30, 30]) sphere(r=1000);
+  }
+  translate([-(cWidth) / 2, 0, bottomHalfHeight + rimHeight / 2]) {
+    resize(newsize=[protrusionDepth, 30, 30]) sphere(r=1000);
+  }
+
 
   // the bottom piece of the box has a bit of an internal rim to 
   // hold the top piece in place.  This is a simple 3D rectangle that is subtracted from the top piece.
@@ -242,9 +262,11 @@ module top() {
 // create a holder for the canya instances. It is a thin floating wall with 3 holes.
 // The holder is 4*wallThickness from the bottom so the canya instances can be placed into it.
 // the holder also has pillars to keep it separate from the bottom}
+holderWidth = baseWidth - 2*wallThickness - 5;
+holderHeight = baseDepth - 2*wallThickness - 5;
 module holder() {
-  cWidth = baseWidth - 2*wallThickness - 5;
-  cHeight = baseDepth - 2*wallThickness - 5;
+  cWidth = holderWidth;
+  cHeight = holderHeight;
   color([0.8, 0.6, 0.2])
     translate([-cWidth / 2, -cHeight / 2, wallThickness * 5]) {
       // large cube
@@ -267,8 +289,32 @@ module holder() {
 }
 
 module holderHoles() {
-  cWidth = baseWidth;
-  cHeight = baseDepth;
+  cWidth = holderWidth+1;
+  cHeight = holderHeight+1;
+  translate([ cWidth / 2, cHeight / 4, 0]) {
+    cube([wallThickness, wallThickness, 10000], center=true);
+  }
+  translate([ cWidth / 2, -cHeight / 4, 0]) {
+    cube([wallThickness, wallThickness, 10000], center=true);
+  }
+  translate([ -cWidth / 2, cHeight / 4, 0]) {
+    cube([wallThickness, wallThickness, 10000], center=true);
+  }
+  translate([ -cWidth / 2, -cHeight / 4, 0]) {
+    cube([wallThickness, wallThickness, 10000], center=true);
+  }
+  translate([ cWidth / 4, cHeight / 2, 0]) {
+    cube([wallThickness, wallThickness, 10000], center=true);
+  }
+  translate([ cWidth / 4, -cHeight / 2, 0]) {
+    cube([wallThickness, wallThickness, 10000], center=true);
+  }
+  translate([ -cWidth / 4, cHeight / 2, 0]) {
+    cube([wallThickness, wallThickness, 10000], center=true);
+  }
+  translate([ -cWidth / 4, -cHeight / 2, 0]) {
+    cube([wallThickness, wallThickness, 10000], center=true);
+  }
   translate([-spacing - pieceMaxDiameter, 0, 0]) {
     cylinder(h=10000, r=2 + topDiameter1 / 2, center=false);
   }
@@ -328,14 +374,14 @@ if (showTop) {
 
 if (showCanyes && !preparePrint) {
   // left
-  translate([-spacing - pieceMaxDiameter, 0, baseHeight]) rotate([0, 0, -45]) color("#cc3333")
+  translate([-spacing - pieceMaxDiameter, 0, baseHeight]) rotate([0, 0, -90]) color("#cc3333")
         canya();
 
   // center
-  translate([0, 0, baseHeight]) rotate([0, 0, -45]) color("#33cc33")
+  translate([0, 0, baseHeight]) rotate([0, 0, -90]) color("#33cc33")
         canya();
 
   // right
-  translate([spacing + pieceMaxDiameter, 0, baseHeight]) rotate([0, 0, -45]) color("#3333cc")
+  translate([spacing + pieceMaxDiameter, 0, baseHeight]) rotate([0, 0, -90]) color("#3333cc")
         canya();
 }
