@@ -14,7 +14,17 @@ showTop = true;  // set to false to hide the top piece
 showHolder = true;
 
 wallThickness = 30;  // 3 mm thickness of the walls of the canya
-tolerance = 4;  // keep this 1/10 of the wallThickness or at least 4
+
+// this is the tolerance for the rim of the box
+// keep this 1/10 of the wallThickness or at least 6
+// 6 is 3x the nozzle size of my printer. the thing is want
+// the rims to wiggle and will let the protrusions do the work
+tolerance = 6;
+
+// this is the tolerance for the hole where the canya sits
+// keep this least 4 (?)
+// This is radius tolerance (not diameter!)
+toleranceRadiusOnCanyaHole = 2;
 
 // dimensions (top-level so both module and base can use them)
 height1 = 156;  // 15.6 mm
@@ -294,85 +304,107 @@ module holderSingleHole() {
     cube([wallThickness, wallThickness, 10000], center = true);
 }
 
+// this is the main hole where the canya sites. It must
+// have some wiggle room
+holderHoleRadius = toleranceRadiusOnCanyaHole + topDiameter1 / 2;
+
 module holderHoles3() {
     cWidth = holderWidth + 1;
     cHeight = holderHeight + 1;
-    translate([cWidth / 2, cHeight / 4, 0]) {
-        holderSingleHole();
-    }
-    translate([cWidth / 2, -cHeight / 4, 0]) {
-        holderSingleHole();
-    }
-    translate([-cWidth / 2, cHeight / 4, 0]) {
-        holderSingleHole();
-    }
-    translate([-cWidth / 2, -cHeight / 4, 0]) {
-        holderSingleHole();
-    }
-    translate([cWidth / 4, cHeight / 2, 0]) {
-        holderSingleHole();
-    }
-    translate([cWidth / 4, -cHeight / 2, 0]) {
-        holderSingleHole();
-    }
-    translate([-cWidth / 4, cHeight / 2, 0]) {
-        holderSingleHole();
-    }
-    translate([-cWidth / 4, -cHeight / 2, 0]) {
-        holderSingleHole();
-    }
-    translate([-spacing - pieceMaxDiameter, 0, 0]) {
-        cylinder(h = 10000, r = 2 + topDiameter1 / 2, center = false);
-    }
-    translate([0, 0, 0]) {
-        cylinder(h = 10000, r = 2 + topDiameter1 / 2, center = false);
-    }
-    translate([spacing + pieceMaxDiameter, 0, 0]) {
-        cylinder(h = 10000, r = 2 + topDiameter1 / 2, center = false);
-    }
+    squareHoles(cWidth, cHeight, 2, 2);
+    roundHoles(3, 1);
 }
+
 module holderHoles2() {
     cWidth = holderWidth + 1;
     cHeight = holderHeight + 1;
-    translate([cWidth / 2, cHeight / 4, 0]) {
-        holderSingleHole();
+
+    squareHoles(cWidth, cHeight, 3, 2);
+
+    roundHoles(2, 1);
+}
+
+// The Drying Rack is not inside the box so it can be an arbitrary size
+dryingRackWidth = baseWidth * 5 / 4;
+dryingRackHeight = baseDepth * 3 / 2;
+
+module dryingRack() {
+    cWidth = dryingRackWidth;
+    cHeight = dryingRackHeight;
+
+    cornerWidth = cWidth / 2 - wallThickness * 2;
+    cornerHeight = cHeight / 2 - wallThickness * 2;
+
+    cylinderHeight = wallThickness * 7;
+
+    color([0.8, 0.6, 0.2])
+        translate([-cWidth / 2, -cHeight / 2, cylinderHeight - wallThickness * 0.8]) {
+            // large cube
+            linear_extrude(height = wallThickness)
+                offset(r = wallThickness / 2)
+                    square([cWidth, cHeight], center = false);
+        };
+
+    translate([cornerWidth, cornerHeight, 3 * wallThickness]) {
+        cylinder(h = cylinderHeight, r = wallThickness * 2 / 3, center = true);
     }
-    translate([cWidth / 2, -cHeight / 4, 0]) {
-        holderSingleHole();
+    translate([-cornerWidth, cornerHeight, 3 * wallThickness]) {
+        cylinder(h = cylinderHeight, r = wallThickness * 2 / 3, center = true);
     }
-    translate([-cWidth / 2, cHeight / 4, 0]) {
-        holderSingleHole();
+    translate([cornerWidth, -cornerHeight, 3 * wallThickness]) {
+        cylinder(h = cylinderHeight, r = wallThickness * 2 / 3, center = true);
     }
-    translate([-cWidth / 2, -cHeight / 4, 0]) {
-        holderSingleHole();
+    translate([-cornerWidth, -cornerHeight, 3 * wallThickness]) {
+        cylinder(h = cylinderHeight, r = wallThickness * 2 / 3, center = true);
+    }
+}
+
+module squareHoles(cWidth, cHeight, holesOverLength = undef, holesOverWidth = undef) {
+    // Automatic counts keep the holes roughly wallThickness * 4 apart.
+    lengthCount = is_undef(holesOverLength)
+        ? max(2, floor(cWidth / (wallThickness * 4)))
+        : holesOverLength;
+    widthCount = is_undef(holesOverWidth)
+        ? max(2, floor(cHeight / (wallThickness * 4)))
+        : holesOverWidth;
+
+    // Holes along the two sides whose length is cWidth.
+    for (index = [1 : lengthCount]) {
+        x = cWidth * (index - 0.5) / lengthCount - cWidth / 2;
+        translate([x, cHeight / 2, 0])
+            holderSingleHole();
+        translate([x, -cHeight / 2, 0])
+            holderSingleHole();
     }
 
-    translate([cWidth * 5 / 16, cHeight / 2, 0]) {
-        holderSingleHole();
+    // Holes along the two sides whose length is cHeight.
+    for (index = [1 : widthCount]) {
+        y = cHeight * (index - 0.5) / widthCount - cHeight / 2;
+        translate([cWidth / 2, y, 0])
+            holderSingleHole();
+        translate([-cWidth / 2, y, 0])
+            holderSingleHole();
     }
-    translate([0, cHeight / 2, 0]) {
-        holderSingleHole();
-    }
-    translate([-cWidth * 5 / 16, cHeight / 2, 0]) {
-        holderSingleHole();
-    }
+}
 
-    translate([cWidth * 5 / 16, -cHeight / 2, 0]) {
-        holderSingleHole();
-    }
-    translate([0, -cHeight / 2, 0]) {
-        holderSingleHole();
-    }
-    translate([-cWidth * 5 / 16, -cHeight / 2, 0]) {
-        holderSingleHole();
-    }
+module roundHoles(holesOverLength, holesOverWidth) {
+    holeSpacing = spacing + pieceMaxDiameter;
 
-    translate([-(spacing + pieceMaxDiameter) * 4 / 7, 0, 0]) {
-        cylinder(h = 10000, r = 2 + topDiameter1 / 2, center = false);
+    for (lengthIndex = [0 : holesOverLength - 1]) {
+        x = (lengthIndex - (holesOverLength - 1) / 2) * holeSpacing;
+        for (widthIndex = [0 : holesOverWidth - 1]) {
+            y = (widthIndex - (holesOverWidth - 1) / 2) * holeSpacing;
+            translate([x, y, 0])
+                cylinder(h = 10000, r = holderHoleRadius, center = false);
+        }
     }
-    translate([(spacing + pieceMaxDiameter) * 4 / 7, 0, 0]) {
-        cylinder(h = 10000, r = 2 + topDiameter1 / 2, center = false);
-    }
+}
+
+module dryingRackHoles() {
+    cWidth = dryingRackWidth;
+    cHeight = dryingRackHeight;
+    squareHoles(cWidth, cHeight);
+    roundHoles(4, 2);
 }
 
 // bottom base
@@ -397,6 +429,12 @@ if (showHolder) {
             difference() {
                 holder();
                 holderHoles2();
+            }
+        }
+        translate([1000 + baseWidth, -200 + baseDepth, 0]) {
+            difference() {
+                dryingRack();
+                dryingRackHoles();
             }
         }
     } else {
