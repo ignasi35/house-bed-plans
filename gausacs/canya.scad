@@ -9,8 +9,8 @@ if (preparePrint) {
 }
 
 showCanyes = true;  // set to false to hide the canya instances
-showBottom = true;  // set to false to hide the bottom piece
-showTop = true;  // set to false to hide the top piece
+showBottom = false;  // set to false to hide the bottom piece
+showTop = false;  // set to false to hide the top piece
 showHolder = true;
 
 wallThickness = 30;  // 3 mm thickness of the walls of the canya
@@ -324,6 +324,53 @@ module holderHoles2() {
     roundHoles(2, 1);
 }
 
+module sampleRoundHole(x, y, radius, label) {
+    holeHeight = 300;
+    translate([x, y, 0])
+        cylinder(h = holeHeight, r = radius, center = false);
+    translate([x, y + radius + 25, 0])
+        linear_extrude(height = holeHeight)
+            text(
+                label,
+                size = 30,
+                font = "Liberation Sans:style=Bold",
+                halign = "center",
+                valign = "center"
+            );
+}
+module actualRoundHole(x, y) {
+    sampleRoundHole(
+        x,
+        y,
+        holderHoleRadius,
+        str(toleranceRadiusOnCanyaHole)
+    );
+}
+
+module sampleHolesSmall() {
+    sampleRoundHole(-spacing - pieceMaxDiameter, 0, 2 + topDiameter1 / 2, "2");
+    sampleRoundHole(0, 0, 3 + topDiameter1 / 2, "3");
+    sampleRoundHole(spacing + pieceMaxDiameter, 0, 4 + topDiameter1 / 2, "4");
+}
+
+module sampleHolesLarge() {
+    sampleRoundHole(-spacing - pieceMaxDiameter, 0, 5 + topDiameter1 / 2, "5");
+    sampleRoundHole(0, 0, 6 + topDiameter1 / 2, "6");
+    sampleRoundHole(spacing + pieceMaxDiameter, 0, 7 + topDiameter1 / 2, "7");
+}
+
+module roundHoles(holesOverLength, holesOverWidth) {
+    holeSpacing = spacing + pieceMaxDiameter;
+
+    for (lengthIndex = [0 : holesOverLength - 1]) {
+        x = (lengthIndex - (holesOverLength - 1) / 2) * holeSpacing;
+        for (widthIndex = [0 : holesOverWidth - 1]) {
+            y = (widthIndex - (holesOverWidth - 1) / 2) * holeSpacing;
+            actualRoundHole(x, y);
+        }
+    }
+}
+
 // The Drying Rack is not inside the box so it can be an arbitrary size
 dryingRackWidth = baseWidth * 5 / 4;
 dryingRackHeight = baseDepth * 3 / 2;
@@ -345,6 +392,7 @@ module dryingRack() {
                     square([cWidth, cHeight], center = false);
         };
 
+    // rack legs
     translate([cornerWidth, cornerHeight, 3 * wallThickness]) {
         cylinder(h = cylinderHeight, r = wallThickness * 2 / 3, center = true);
     }
@@ -387,19 +435,6 @@ module squareHoles(cWidth, cHeight, holesOverLength = undef, holesOverWidth = un
     }
 }
 
-module roundHoles(holesOverLength, holesOverWidth) {
-    holeSpacing = spacing + pieceMaxDiameter;
-
-    for (lengthIndex = [0 : holesOverLength - 1]) {
-        x = (lengthIndex - (holesOverLength - 1) / 2) * holeSpacing;
-        for (widthIndex = [0 : holesOverWidth - 1]) {
-            y = (widthIndex - (holesOverWidth - 1) / 2) * holeSpacing;
-            translate([x, y, 0])
-                cylinder(h = 10000, r = holderHoleRadius, center = false);
-        }
-    }
-}
-
 module dryingRackHoles() {
     cWidth = dryingRackWidth;
     cHeight = dryingRackHeight;
@@ -435,6 +470,18 @@ if (showHolder) {
             difference() {
                 dryingRack();
                 dryingRackHoles();
+            }
+        }
+        translate([300 + baseWidth, -800 + baseDepth, 0]) {
+            difference() {
+                holder();
+                sampleHolesSmall();
+            }
+        }
+        translate([1000 + baseWidth, -800 + baseDepth, 0]) {
+            difference() {
+                holder();
+                sampleHolesLarge();
             }
         }
     } else {
