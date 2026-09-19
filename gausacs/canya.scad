@@ -1,4 +1,4 @@
-preparePrint = true;  // set to false to hide the print bed
+preparePrint = false;  // set to false to hide the print bed
 
 if (preparePrint) {
     $fn = 50;
@@ -9,8 +9,8 @@ if (preparePrint) {
 }
 
 showCanyes = true;  // set to false to hide the canya instances
-showBottom = false;  // set to false to hide the bottom piece
-showTop = false;  // set to false to hide the top piece
+showBottom = true;  // set to false to hide the bottom piece
+showTop = true;  // set to false to hide the top piece
 showHolder = true;
 
 wallThickness = 30;  // 3 mm thickness of the walls of the canya
