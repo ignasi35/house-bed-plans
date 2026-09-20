@@ -1,4 +1,4 @@
-preparePrint = false;  // set to false to hide the print bed
+preparePrint = true;  // set to false to hide the print bed
 
 if (preparePrint) {
     $fn = 50;
@@ -9,9 +9,9 @@ if (preparePrint) {
 }
 
 showCanyes = true;  // set to false to hide the canya instances
-showBottom = true;  // set to false to hide the bottom piece
+showBottom = false;  // set to false to hide the bottom piece
 showTop = true;  // set to false to hide the top piece
-showHolder = true;
+showHolder = false;
 
 wallThickness = 30;  // 3 mm thickness of the walls of the canya
 
@@ -25,6 +25,10 @@ tolerance = 6;
 // keep this least 4 (?)
 // This is radius tolerance (not diameter!)
 toleranceRadiusOnCanyaHole = 2;
+
+// this is the main hole where the canya sits. It must
+// have some wiggle room
+holderHoleRadius = toleranceRadiusOnCanyaHole + topDiameter1 / 2;
 
 // dimensions (top-level so both module and base can use them)
 height1 = 156;  // 15.6 mm
@@ -107,6 +111,64 @@ module holes() {
     }
     translate([(cWidth) * 2 / 7, 0, -100]) {
         cylinder(h = 10000, r = wallThickness, center = false);
+    }
+}
+
+sides = 8;
+module innerSupportShape(dimsOut, supportHeight) {
+    difference() {
+        // actual shape
+        //cube([dimsOut, dimsOut, supportHeight], center = true);
+        //cylinder(h = supportHeight,r1 = dimsOut * 2 / 3,r2 = dimsOut * 2 / 3,center = true);
+        cylinder(
+            h = supportHeight,
+            r1 = dimsOut * 11 / 20,
+            r2 = dimsOut * 17 / 20,
+            center = true,
+            $fn = sides
+        );
+        // holes
+        translate([0, 0, -30]) {
+            for (index = [0 : sides - 1]) {
+                rotate([0, 0, index * 360 / sides])
+                    cube([20, holderHoleRadius * 10, 100], center = true);
+            }
+        }
+    }
+}
+
+module innerSupport(supportHeight) {
+    dimsIn = holderHoleRadius;
+    dimsOut = dimsIn * 2 - toleranceRadiusOnCanyaHole;
+    difference() {
+        innerSupportShape(dimsOut, supportHeight);
+        cylinder(h = supportHeight + 10, r1 = dimsIn, r2 = dimsIn + 2, center = true);
+        translate([0, 0, -supportHeight * 13 / 9]) {
+            cube([dimsOut * 2, dimsOut * 2, dimsOut * 2], center = true);
+        }
+    }
+}
+
+module innerSupports() {
+    cWidth = baseWidth;
+    cHeight = baseDepth;
+    supportHeight = height1 * 4 / 5;
+    translate(
+        [
+            0,
+            0,
+            bottomHalfHeight + topHalfHeight + supportHeight / 4
+        ]
+    ) {
+        translate([-(cWidth) * 2 / 7, 0, -100]) {
+            innerSupport(supportHeight);
+        }
+        translate([0, 0, -100]) {
+            innerSupport(supportHeight);
+        }
+        translate([(cWidth) * 2 / 7, 0, -100]) {
+            innerSupport(supportHeight);
+        }
     }
 }
 
@@ -303,10 +365,6 @@ module holder() {
 module holderSingleHole() {
     cube([wallThickness, wallThickness, 10000], center = true);
 }
-
-// this is the main hole where the canya sites. It must
-// have some wiggle room
-holderHoleRadius = toleranceRadiusOnCanyaHole + topDiameter1 / 2;
 
 module holderHoles3() {
     cWidth = holderWidth + 1;
@@ -512,16 +570,38 @@ if (showTop) {
     }
 }
 
-if (showCanyes && !preparePrint) {
-    // left
-    translate([-spacing - pieceMaxDiameter, 0, baseHeight]) rotate([0, 0, -90]) color("#cc3333")
-        canya();
+if (showTop) {
+    // top base with supports
+    translate([0, 1000, bottomHalfHeight + topHalfHeight]) {
+        rotate([180, 0, 0]) {
+            difference() {
+                difference() {
+                    top();
+                    topRim();
+                }
+                holes();
+            }
+            innerSupports();
+        }
+    }
+}
 
+module tresCanyes() {
+    correction = 10;
+    // left
+    translate([-spacing - pieceMaxDiameter + correction, 0, baseHeight]) rotate([0, 0, -90]) color("#cc3333")
+        canya();
     // center
     translate([0, 0, baseHeight]) rotate([0, 0, -90]) color("#33cc33")
         canya();
-
     // right
-    translate([spacing + pieceMaxDiameter, 0, baseHeight]) rotate([0, 0, -90]) color("#3333cc")
+    translate([spacing + pieceMaxDiameter - correction, 0, baseHeight]) rotate([0, 0, -90]) color("#3333cc")
         canya();
+}
+
+if (showCanyes && !preparePrint) {
+    tresCanyes();
+    translate([0, 1000, 0]) {
+        tresCanyes();
+    }
 }

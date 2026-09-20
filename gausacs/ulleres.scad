@@ -11,6 +11,9 @@ if (preparePrint) {
 showBottom = true;  // set to false to hide the bottom piece
 showTop = true;  // set to false to hide the top piece
 
+// This value is wrong and it actually represents twice the
+// thickness. Fixing it would require redoing every callsite.
+// 80 means a thickness of 4mm (80/10 = 8mm -> 8mm/2 = 4mm)
 wallThickness = 80;
 
 // this is the tolerance for the rim of the box
@@ -19,7 +22,7 @@ wallThickness = 80;
 // the rims to wiggle and will let the protrusions do the work
 toleranceRim = 8;
 
-internalTotalBoxHeight = 1600;
+internalTotalBoxHeight = 1550;
 externalWidth = 400;
 externalDepth = externalWidth + 300;
 largeCircleDiameter = externalWidth;
@@ -44,7 +47,7 @@ module bottom() {
     difference() {
         //largeShape
         shape(largeCircleDiameter, distanceBetweenCenters, bottomHalfHeight);
-        translate([0, 0, wallThickness])// smallShape
+        translate([0, 0, wallThickness / 2])// smallShape
             shape(largeCircleDiameter - wallThickness, distanceBetweenCenters, bottomHalfHeight);
     }
 }
