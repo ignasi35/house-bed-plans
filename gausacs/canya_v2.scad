@@ -1,6 +1,6 @@
 preparePrint = true;  // set to false to hide the print bed
 
-$fn = 10;
+$fn = 20;
 
 showBottom = true;  // set to false to hide the bottom piece
 showTop = true;  // set to false to hide the top piece
@@ -14,17 +14,20 @@ toleranceRim = 6;
 wallThickness = 38;
 protrusionDepth = wallThickness / 2 - toleranceRim;
 
-internalWidth = 280;
-internalDepth = 600;
-internalHeight = 780;
+externalWidthFix = 280;
+externalDepthFix = 600;
+externalHeightFix = 780;
 
-internalTotalBoxHeight = internalHeight;
-externalWidth = internalWidth + 2 * wallThickness;
-externalDepth = internalDepth + 2 * wallThickness;
-externalHeight = internalHeight + 2 * wallThickness;
-circleDiameter = wallThickness * 2.1;
-distanceBetweenCentersY = internalDepth - circleDiameter;
-distanceBetweenCentersX = internalWidth - circleDiameter;
+totalWallThickness = wallThickness * 2.1;
+
+internalWidthFix = externalWidthFix - totalWallThickness;
+internalDepthFix = externalDepthFix - totalWallThickness;
+internalHeightFix = externalHeightFix - totalWallThickness;
+internalTotalBoxHeight = internalHeightFix;
+
+circleDiameter = totalWallThickness;
+distanceBetweenCentersY = externalDepthFix - circleDiameter;
+distanceBetweenCentersX = externalWidthFix - circleDiameter;
 
 bottomHalfHeight = internalTotalBoxHeight * 7 / 19 + wallThickness;
 topHalfHeight = internalTotalBoxHeight * 12 / 19 + wallThickness;
@@ -75,7 +78,7 @@ module protrusion(protrusionDepthX, protrusionDepthY) {
 }
 module protrusions(tolerance, protrusionDepth) {
     x1 = (circleDiameter + distanceBetweenCentersX - wallThickness + tolerance) / 2;
-    y1 = 1 / 6 * internalDepth;
+    y1 = 1 / 6 * externalDepthFix;
     z1 = rimHeight / 2;
 
     translate([x1, y1, z1]) protrusion(protrusionDepth, 30);
@@ -83,7 +86,7 @@ module protrusions(tolerance, protrusionDepth) {
     translate([-x1, y1, z1]) protrusion(protrusionDepth, 30);
     translate([-x1, -y1, z1]) protrusion(protrusionDepth, 30);
 
-    x2 = 1 / 6 * internalWidth;
+    x2 = 1 / 6 * externalWidthFix;
     y2 = (circleDiameter + distanceBetweenCentersY - wallThickness + tolerance) / 2;
     z2 = z1;
 
@@ -144,8 +147,8 @@ module bottomHalf() {
     translate([0, 0, -totalBottomHeight / 2]) {
         difference() {
             bottomBeforeHinge();
-            translate([internalWidth / 2, 0, 0])
-                cube([internalWidth, internalDepth, internalHeight + 100], center = true);
+            translate([externalWidthFix / 2, 0, 0])
+                cube([externalWidthFix, externalDepthFix, externalHeightFix + 100], center = true);
         }
     }
 }
@@ -171,7 +174,7 @@ module unhingedBottom() {
 
 hingeOuterRadius = wallThickness * 4 / 5;
 hingeInnerRadius = wallThickness * 2 / 5;
-hingeLength = internalDepth * 3 / 4;
+hingeLength = externalDepthFix * 3 / 4;
 pieceCount = 7;
 pieceLength = hingeLength / pieceCount;
 pinLength = pieceLength * 1 / 3;
@@ -278,9 +281,9 @@ module singleClamp(isPositive, h1, h2) {
     }
 }
 module allClampsBottomHinge() {
-    xDist = 2 / 6 * (internalDepth - 2 * wallThickness);
+    xDist = 2 / 6 * (externalDepthFix - 2 * wallThickness);
     yDist = heightOfFirstSection + clampLength / 2 + wallThickness;
-    height = (internalWidth) / 2;
+    height = (externalWidthFix) / 2;
     h2 = height / 2 + wallThickness;
 
     // one side
@@ -301,7 +304,7 @@ module allClampsBottomHinge() {
 }
 
 module completeBottom() {
-    translate([0, 0, (externalWidth - 2 * wallThickness) / 2]) {
+    translate([0, 0, (externalWidthFix) / 2]) {
         difference() {
             unhingedBottom();
             translate([-hingeLength / 2 - 1, 0, 0]) {
@@ -322,10 +325,10 @@ module completeBottom() {
 }
 
 module allClampsHolder() {
-    xDist = 2 / 6 * (internalDepth - 2 * wallThickness);
-    yDist = -internalHeight / 2 + heightOfFirstSection + clampLength / 2;
-    h1 = (internalWidth) / 2;
-    h2 = wallThickness * 2;
+    xDist = 2 / 6 * (internalDepthFix - wallThickness);
+    yDist = -internalHeightFix / 2 + heightOfFirstSection + clampLength / 2;
+    h1 = (internalWidthFix + wallThickness * 1 / 3) / 2;
+    h2 = h1 / 2 + wallThickness * 1 / 3;
 
     // one side
     translate([0, yDist, 0])
@@ -335,21 +338,29 @@ module allClampsHolder() {
     translate([-xDist, yDist, 0])
         singleClamp(isPositive = 1, h1, h2);
 }
+
 module canyaHolderExternal() {
     difference() {
-        cube([internalWidth * 2 / 3, internalDepth, internalHeight], center = true);
+        cube([internalWidthFix - 2, internalDepthFix - 2, internalHeightFix - 2], center = true);
         translate([wallThickness * 1 / 3, 0, 0]) {
-            cube([internalWidth * 2 / 3, internalDepth - wallThickness * 2 / 3, internalHeight + 10], center = true);
+            cube(
+                [
+                    internalWidthFix,
+                    internalDepthFix - wallThickness * 2 / 3,
+                    internalHeightFix + 10
+                ],
+                center = true
+            );
         }
-        translate([internalWidth * 2 / 7, 0, 0]) {
+        translate([internalWidthFix * 4 / 7, 0, 0]) {
             hull() {
-                translate([0, 0, internalHeight * 2 / 9])
+                translate([0, 0, internalHeightFix * 2 / 13])
                     rotate([90, 0, 0]) {
-                        cylinder(r = 100, h = internalDepth + wallThickness, $fn = 100, center = true);
+                        cylinder(r = internalWidthFix * 3 / 4, h = internalDepthFix + wallThickness, $fn = 100, center = true);
                     };
-                translate([0, 0, -internalHeight * 2 / 9])
+                translate([0, 0, -internalHeightFix * 2 / 13])
                     rotate([90, 0, 0]) {
-                        cylinder(r = 100, h = internalDepth + wallThickness, $fn = 100, center = true);
+                        cylinder(r = internalWidthFix * 3 / 4, h = internalDepthFix + wallThickness, $fn = 100, center = true);
                     };
             }
         }
@@ -357,7 +368,7 @@ module canyaHolderExternal() {
 }
 
 module canyaHolder() {
-    translate([0, 0, internalWidth / 3])
+    translate([0, 0, internalWidthFix / 2])
         rotate([0, -90, 90]) {
             canyaHolderExternal();
         };
@@ -374,10 +385,11 @@ if (showBottom) {
     translate([800, 1000, 0]) {
         bottomBeforeHinge();
     }
-    translate([800, -internalHeight / 2, 0]) {
+    translate([800, -internalHeightFix / 2, 0]) {
         completeBottom();
     }
 }
+
 if (showTop) {
     translate([0, 1000, 0]) {
         completeTop();
