@@ -9,26 +9,11 @@ if (preparePrint) {
 }
 
 showCanyes = true;  // set to false to hide the canya instances
-showBottom = false;  // set to false to hide the bottom piece
+showBottom = true;  // set to false to hide the bottom piece
 showTop = true;  // set to false to hide the top piece
-showHolder = false;
+showHolder = true;
 
 wallThickness = 30;  // 3 mm thickness of the walls of the canya
-
-// this is the tolerance for the rim of the box
-// keep this 1/10 of the wallThickness or at least 6
-// 6 is 3x the nozzle size of my printer. the thing is want
-// the rims to wiggle and will let the protrusions do the work
-tolerance = 6;
-
-// this is the tolerance for the hole where the canya sits
-// keep this least 4 (?)
-// This is radius tolerance (not diameter!)
-toleranceRadiusOnCanyaHole = 2;
-
-// this is the main hole where the canya sits. It must
-// have some wiggle room
-holderHoleRadius = toleranceRadiusOnCanyaHole + topDiameter1 / 2;
 
 // dimensions (top-level so both module and base can use them)
 height1 = 156;  // 15.6 mm
@@ -44,6 +29,21 @@ diameter4 = 107;
 plateX = 160;
 plateY = 1;
 plateZ = 200;
+
+// this is the tolerance for the rim of the box
+// keep this 1/10 of the wallThickness or at least 6
+// 6 is 3x the nozzle size of my printer. the thing is want
+// the rims to wiggle and will let the protrusions do the work
+tolerance = 6;
+
+// this is the tolerance for the hole where the canya sits
+// keep this least 4 (?)
+// This is radius tolerance (not diameter!)
+toleranceRadiusOnCanyaHole = 2;
+
+// this is the main hole where the canya sits. It must
+// have some wiggle room
+holderHoleRadius = toleranceRadiusOnCanyaHole + topDiameter1 / 2;
 
 // Example: three copies side-by-side, rotated 45° clockwise, different colors
 // define instance parameters (reuse defaults above)
