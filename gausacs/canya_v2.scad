@@ -1,6 +1,6 @@
 preparePrint = true;  // set to false to hide the print bed
 
-$fn = 40;
+$fn = 10;
 
 showBottom = true;  // set to false to hide the bottom piece
 showTop = true;  // set to false to hide the top piece
